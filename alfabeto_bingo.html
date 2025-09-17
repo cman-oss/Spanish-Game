@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego del Alfabeto</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; background: #fdfdfd; }
+    button { margin: 10px; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; border: none; }
+    #letter { font-size: 48px; margin: 20px; font-weight: bold; color: #333; }
+    #feedback { font-size: 20px; margin-top: 10px; height: 30px; }
+    input { padding: 10px; font-size: 18px; text-align: center; border: 2px solid #ccc; border-radius: 8px; }
+    .correct { color: green; font-weight: bold; }
+    .incorrect { color: red; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>🎧 Practica el Alfabeto 🎧</h1>
+  <p>Escucha la letra en español y escríbela abajo:</p>
+
+  <div id="letter">?</div>
+  <input type="text" id="answer" maxlength="2" placeholder="Escribe aquí">
+  <br>
+  <button onclick="checkAnswer()">✅ Comprobar</button>
+  <button id="nextBtn" onclick="nextLetter()">⏭️ Siguiente</button>
+
+  <div id="feedback"></div>
+
+  <script>
+    const letters = [
+      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z"
+    ];
+
+    let currentLetter = "";
+
+    function nextLetter() {
+      currentLetter = letters[Math.floor(Math.random() * letters.length)];
+      document.getElementById("letter").textContent = "❓";
+      document.getElementById("answer").value = "";
+      document.getElementById("feedback").textContent = "";
+
+      const utterance = new SpeechSynthesisUtterance(currentLetter);
+      utterance.lang = "es-ES";
+      utterance.rate = 0.9;
+      speechSynthesis.speak(utterance);
+    }
+
+    function checkAnswer() {
+      const userAnswer = document.getElementById("answer").value.trim().toLowerCase();
+      if (userAnswer === currentLetter) {
+        document.getElementById("feedback").textContent = "¡Correcto! 🎉";
+        document.getElementById("feedback").className = "correct";
+        document.getElementById("letter").textContent = currentLetter.toUpperCase();
+      } else {
+        document.getElementById("feedback").textContent = `Incorrecto ❌ (Era: ${currentLetter.toUpperCase()})`;
+        document.getElementById("feedback").className = "incorrect";
+        document.getElementById("letter").textContent = currentLetter.toUpperCase();
+      }
+      // Ensure next button is visible after checking
+      document.getElementById("nextBtn").style.display = "inline-block";
+    }
+
+    // Start with first letter automatically
+    nextLetter();
+  </script>
+</body>
+</html>
