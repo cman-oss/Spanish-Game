@@ -1,66 +1,847 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Juego del Alfabeto</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin: 20px; background: #fdfdfd; }
-    button { margin: 10px; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer; border: none; }
-    #letter { font-size: 48px; margin: 20px; font-weight: bold; color: #333; }
-    #feedback { font-size: 20px; margin-top: 10px; height: 30px; }
-    input { padding: 10px; font-size: 18px; text-align: center; border: 2px solid #ccc; border-radius: 8px; }
-    .correct { color: green; font-weight: bold; }
-    .incorrect { color: red; font-weight: bold; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica de El Alfabeto</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ==========================================================================
+           1. CSS RESET & GLOBAL STYLES
+           - A clean slate for consistent styling across browsers.
+           - Inspired by modern reset methodologies.
+           ================================----------------========================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 100%; /* 16px base */
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f7f7f7;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ==========================================================================
+           2. CSS CUSTOM PROPERTIES (VARIABLES)
+           - Centralizes theme colors and values for easy customization.
+           - A core tenet of modern, maintainable CSS.
+           ================================----------------========================== */
+        :root {
+            --primary-color: #58cc02;
+            --primary-color-dark: #4aa502;
+            --secondary-color: #1cb0f6;
+            --secondary-color-dark: #1899d6;
+            --danger-color: #ff4b4b;
+            --danger-color-dark: #d63f3f;
+            --light-grey: #e5e5e5;
+            --medium-grey: #aFAFaF;
+            --dark-grey: #777;
+            --white: #ffffff;
+            --black: #4c4c4c;
+            
+            --border-radius-sm: 8px;
+            --border-radius-md: 12px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ==========================================================================
+           3. GAME CONTAINER & LAYOUT
+           - Main wrapper for the entire application.
+           - Uses modern layout techniques for centering and responsiveness.
+           ========================================================================== */
+        #game-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 1rem;
+            background: var(--white);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .screen {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+        }
+
+        .screen.hidden {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        /* ==========================================================================
+           4. TYPOGRAPHY & UI ELEMENTS
+           - Consistent styling for headers, paragraphs, and buttons.
+           ================================----------------========================== */
+        h1 {
+            font-size: 2rem;
+            color: var(--black);
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            color: var(--dark-grey);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .button {
+            display: inline-block;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-bottom: 4px solid var(--primary-color-dark);
+            border-radius: var(--border-radius-md);
+            background: var(--primary-color);
+            color: var(--white);
+            font-size: 1.25rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+            -webkit-tap-highlight-color: transparent; /* For mobile */
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .button:active:not(:disabled) {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+        
+        .button:disabled {
+            background: var(--light-grey);
+            border-bottom-color: var(--medium-grey);
+            cursor: not-allowed;
+        }
+        
+        .button.secondary {
+            background: var(--secondary-color);
+            border-bottom-color: var(--secondary-color-dark);
+        }
+
+        /* ==========================================================================
+           5. GAME SCREEN SPECIFIC STYLES
+           - Header stats, question area, answer options.
+           ========================================================================== */
+
+        /* --- Header Stats --- */
+        #game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 2px solid var(--light-grey);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark-grey);
+        }
+        
+        .stat-item svg {
+            width: 28px;
+            height: 28px;
+            margin-right: 0.5rem;
+        }
+        
+        #score-stat { color: var(--secondary-color); }
+        #lives-stat { color: var(--danger-color); }
+        #streak-stat { color: #ffc107; }
+
+
+        /* --- Question Area --- */
+        #question-area {
+            margin: 2.5rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #listen-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            border: none;
+            border-bottom: 8px solid var(--secondary-color-dark);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.1s ease, background-color 0.2s ease;
+        }
+
+        #listen-button:hover { background: #1da3e0; }
+        #listen-button:active {
+             transform: translateY(4px);
+             border-bottom-width: 4px;
+        }
+
+        #listen-button svg {
+            width: 50px;
+            height: 50px;
+            fill: white;
+        }
+
+        #instruction-text {
+            margin-top: 1rem;
+            font-weight: 600;
+            font-size: 1.2rem;
+            color: var(--dark-grey);
+        }
+
+        /* --- Answer Options --- */
+        #answer-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .answer-btn {
+            padding: 1.25rem;
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-grey);
+            background: var(--white);
+            border: 2px solid var(--light-grey);
+            border-bottom-width: 4px;
+            border-radius: var(--border-radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .answer-btn:hover:not(.disabled) {
+            background: #f0f0f0;
+            border-color: var(--medium-grey);
+        }
+
+        .answer-btn.correct {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color-dark);
+            color: white;
+            animation: bounce 0.5s ease;
+        }
+
+        .answer-btn.wrong {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color-dark);
+            color: white;
+            animation: shake 0.5s ease;
+        }
+
+        .answer-btn.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* --- Feedback Footer --- */
+        #feedback-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            padding: 1.5rem 2rem;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            z-index: 10;
+        }
+
+        #feedback-footer.show {
+            transform: translateY(0);
+        }
+        
+        #feedback-footer.correct { background: #d7ffb8; }
+        #feedback-footer.wrong { background: #ffdfe0; }
+        
+        #feedback-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        #feedback-text.correct { color: var(--primary-color-dark); }
+        #feedback-text.wrong { color: var(--danger-color-dark); }
+
+        #next-button {
+            margin-top: 1rem;
+        }
+        
+        #high-score {
+            margin-top: 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-grey);
+        }
+
+
+        /* ==========================================================================
+           6. ANIMATIONS
+           - Adding life and engagement to the UI.
+           ========================================================================== */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        /* ==========================================================================
+           7. RESPONSIVE DESIGN
+           - Ensuring the game is playable on smaller screens.
+           ========================================================================== */
+        @media (max-width: 480px) {
+            .screen {
+                padding: 1.5rem;
+            }
+            h1 { font-size: 1.8rem; }
+            #game-header { padding: 0.75rem 1rem; }
+            .stat-item { font-size: 1rem; }
+            .stat-item svg { width: 24px; height: 24px; }
+            #listen-button { width: 100px; height: 100px; }
+            #listen-button svg { width: 40px; height: 40px; }
+            #answer-options { gap: 0.75rem; }
+            .answer-btn { padding: 1rem; font-size: 1.5rem; }
+            #feedback-footer { padding: 1rem 1.5rem; }
+        }
+
+    </style>
 </head>
 <body>
-  <h1>🎧 Practica el Alfabeto 🎧</h1>
-  <p>Escucha la letra en español y escríbela abajo:</p>
 
-  <div id="letter">?</div>
-  <input type="text" id="answer" maxlength="2" placeholder="Escribe aquí">
-  <br>
-  <button onclick="checkAnswer()">✅ Comprobar</button>
-  <button id="nextBtn" onclick="nextLetter()">⏭️ Siguiente</button>
+    <svg width="0" height="0" style="position:absolute">
+        <defs>
+            <symbol id="icon-heart" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </symbol>
+            <symbol id="icon-star" viewBox="0 0 24 24">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+            </symbol>
+            <symbol id="icon-xp" viewBox="0 0 24 24">
+                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H8v-2h3V7h2v4h3v2h-3v4h-2z" fill="#1cb0f6"/>
+            </symbol>
+            <symbol id="icon-volume" viewBox="0 0 24 24">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </symbol>
+        </defs>
+    </svg>
 
-  <div id="feedback"></div>
+    <main id="game-container">
 
-  <script>
-    const letters = [
-      "a","b","c","d","e","f","g","h","i","j","k","l","m","n","ñ","o","p","q","r","s","t","u","v","w","x","y","z"
-    ];
+        <section id="start-screen" class="screen">
+            <h1>Práctica del Alfabeto</h1>
+            <p>Escucha el nombre de la letra en español y selecciona la letra correcta. ¡Buena suerte!</p>
+            <p id="voice-error" style="color: var(--danger-color); font-weight: bold; display: none;">
+                Advertencia: No se pudo encontrar una voz en español. La pronunciación puede no ser precisa.
+            </p>
+            <button id="start-button" class="button">Empezar Práctica</button>
+            <div id="high-score">Mejor Puntuación: <span id="high-score-value">0</span></div>
+        </section>
 
-    let currentLetter = "";
+        <section id="game-screen" class="screen hidden">
+            <div id="game-header">
+                <div id="score-stat" class="stat-item">
+                    <svg><use href="#icon-xp"></use></svg>
+                    <span id="score-value">0</span>
+                </div>
+                <div id="streak-stat" class="stat-item">
+                     <svg><use href="#icon-star" fill="#ffc107"></use></svg>
+                    <span id="streak-value">0</span>
+                </div>
+                <div id="lives-stat" class="stat-item">
+                    <svg><use href="#icon-heart" fill="#ff4b4b"></use></svg>
+                    <span id="lives-value">5</span>
+                </div>
+            </div>
 
-    function nextLetter() {
-      currentLetter = letters[Math.floor(Math.random() * letters.length)];
-      document.getElementById("letter").textContent = "❓";
-      document.getElementById("answer").value = "";
-      document.getElementById("feedback").textContent = "";
+            <div id="question-area">
+                <button id="listen-button" title="Escuchar de nuevo">
+                    <svg><use href="#icon-volume"></use></svg>
+                </button>
+                <p id="instruction-text">Toca el parlante para escuchar</p>
+            </div>
 
-      const utterance = new SpeechSynthesisUtterance(currentLetter);
-      utterance.lang = "es-ES";
-      utterance.rate = 0.9;
-      speechSynthesis.speak(utterance);
-    }
+            <div id="answer-options">
+                </div>
+        </section>
 
-    function checkAnswer() {
-      const userAnswer = document.getElementById("answer").value.trim().toLowerCase();
-      if (userAnswer === currentLetter) {
-        document.getElementById("feedback").textContent = "¡Correcto! 🎉";
-        document.getElementById("feedback").className = "correct";
-        document.getElementById("letter").textContent = currentLetter.toUpperCase();
-      } else {
-        document.getElementById("feedback").textContent = `Incorrecto ❌ (Era: ${currentLetter.toUpperCase()})`;
-        document.getElementById("feedback").className = "incorrect";
-        document.getElementById("letter").textContent = currentLetter.toUpperCase();
-      }
-      // Ensure next button is visible after checking
-      document.getElementById("nextBtn").style.display = "inline-block";
-    }
+        <section id="end-screen" class="screen hidden">
+            <h2>¡Juego Terminado!</h2>
+            <p>Tu puntuación final es:</p>
+            <h1 id="final-score">0</h1>
+            <p>¡Sigue practicando para mejorar!</p>
+            <button id="restart-button" class="button">Jugar de Nuevo</button>
+        </section>
+        
+        <div id="feedback-footer">
+            <h2 id="feedback-text"></h2>
+            <button id="next-button" class="button">Continuar</button>
+        </div>
 
-    // Start with first letter automatically
-    nextLetter();
-  </script>
+    </main>
+
+    <script>
+    /**
+     * =========================================================================
+     * JAVASCRIPT LOGIC FOR "EL ALFABETO" GAME
+     *
+     * Author: An expert developer from Duolingo
+     * Version: 1.0.0
+     * Description: A feature-rich listening practice game for the Spanish alphabet.
+     * =========================================================================
+     */
+    
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // =========================================================================
+        // 1. DATA & CONSTANTS
+        // - Defines the core data (alphabet) and constants for game settings.
+        // - A data-driven approach makes the game easy to extend or modify.
+        // =========================================================================
+
+        const ALPHABET_DATA = [
+            { letter: 'A', name: 'a' }, { letter: 'B', name: 'be' }, { letter: 'C', name: 'ce' },
+            { letter: 'D', name: 'de' }, { letter: 'E', name: 'e' }, { letter: 'F', name: 'efe' },
+            { letter: 'G', name: 'ge' }, { letter: 'H', name: 'hache' }, { letter: 'I', name: 'i' },
+            { letter: 'J', name: 'jota' }, { letter: 'K', name: 'ka' }, { letter: 'L', name: 'ele' },
+            { letter: 'M', name: 'eme' }, { letter: 'N', name: 'ene' }, { letter: 'Ñ', name: 'eñe' },
+            { letter: 'O', name: 'o' }, { letter: 'P', name: 'pe' }, { letter: 'Q', name: 'cu' },
+            { letter: 'R', name: 'erre' }, { letter: 'S', name: 'ese' }, { letter: 'T', name: 'te' },
+            { letter: 'U', name: 'u' }, { letter: 'V', name: 'uve' }, { letter: 'W', name: 'uve doble' },
+            { letter: 'X', name: 'equis' }, { letter: 'Y', name: 'ye' }, { letter: 'Z', name: 'zeta' }
+        ];
+
+        const INITIAL_LIVES = 5;
+        const OPTIONS_COUNT = 4;
+        const XP_PER_CORRECT = 10;
+        
+        // =========================================================================
+        // 2. DOM ELEMENT REFERENCES
+        // - Caching DOM elements for performance. Accessing the DOM is slow,
+        //   so we do it once and store the references.
+        // =========================================================================
+
+        const dom = {
+            screens: {
+                start: document.getElementById('start-screen'),
+                game: document.getElementById('game-screen'),
+                end: document.getElementById('end-screen'),
+            },
+            buttons: {
+                start: document.getElementById('start-button'),
+                restart: document.getElementById('restart-button'),
+                listen: document.getElementById('listen-button'),
+                next: document.getElementById('next-button'),
+            },
+            ui: {
+                answerOptions: document.getElementById('answer-options'),
+                feedbackFooter: document.getElementById('feedback-footer'),
+                feedbackText: document.getElementById('feedback-text'),
+                voiceError: document.getElementById('voice-error'),
+            },
+            stats: {
+                score: document.getElementById('score-value'),
+                lives: document.getElementById('lives-value'),
+                streak: document.getElementById('streak-value'),
+                finalScore: document.getElementById('final-score'),
+                highScore: document.getElementById('high-score-value'),
+            }
+        };
+
+        // =========================================================================
+        // 3. GAME STATE
+        // - A single object to hold the entire state of the game. This makes
+        //   it easier to manage, debug, and save/load if needed.
+        // =========================================================================
+
+        let state = {
+            score: 0,
+            lives: 0,
+            streak: 0,
+            highScore: 0,
+            currentQuestion: null, // { letter: 'A', name: 'a' }
+            questionPool: [],
+            isAnswered: false,
+        };
+        
+        // =========================================================================
+        // 4. SPEECH SYNTHESIS SETUP
+        // - Handles the text-to-speech functionality. It finds a Spanish voice
+        //   and provides a robust `speak` function.
+        // =========================================================================
+
+        let spanishVoice = null;
+        
+        function setupSpeechSynthesis() {
+            const synth = window.speechSynthesis;
+            if (!synth) {
+                console.error("Speech Synthesis not supported.");
+                dom.ui.voiceError.textContent = "Error: Tu navegador no soporta la síntesis de voz.";
+                dom.ui.voiceError.style.display = 'block';
+                return;
+            }
+
+            const findVoice = () => {
+                const voices = synth.getVoices();
+                // Prioritize Spanish (Spain) then Spanish (Mexico), then any Spanish variant.
+                spanishVoice = voices.find(v => v.lang === 'es-ES') ||
+                               voices.find(v => v.lang === 'es-MX') ||
+                               voices.find(v => v.lang.startsWith('es-'));
+                
+                if (!spanishVoice) {
+                    dom.ui.voiceError.style.display = 'block';
+                } else {
+                    dom.ui.voiceError.style.display = 'none';
+                }
+            };
+
+            findVoice();
+            if (synth.onvoiceschanged !== undefined) {
+                synth.onvoiceschanged = findVoice;
+            }
+        }
+        
+        function speak(text) {
+            if (!window.speechSynthesis) return;
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            if (spanishVoice) {
+                utterance.voice = spanishVoice;
+                utterance.lang = spanishVoice.lang;
+            } else {
+                // Fallback if no spanish voice is found
+                utterance.lang = 'es-ES';
+            }
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // =========================================================================
+        // 5. CORE GAME LOGIC
+        // - Functions that control the flow of the game, from starting
+        //   to handling answers and ending the game.
+        // =========================================================================
+        
+        /**
+         * Initializes the game. Sets up event listeners and initial state.
+         * This is the entry point of the application logic.
+         */
+        function init() {
+            setupSpeechSynthesis();
+            loadHighScore();
+            
+            dom.buttons.start.addEventListener('click', startGame);
+            dom.buttons.restart.addEventListener('click', startGame);
+            dom.buttons.listen.addEventListener('click', () => {
+                if(state.currentQuestion) speak(state.currentQuestion.name);
+            });
+            dom.ui.answerOptions.addEventListener('click', handleAnswerClick);
+            dom.buttons.next.addEventListener('click', nextQuestion);
+        }
+        
+        /**
+         * Starts a new game session.
+         */
+        function startGame() {
+            resetState();
+            updateStatsUI();
+            switchScreen(dom.screens.game);
+            nextQuestion();
+        }
+        
+        /**
+         * Loads the next question or ends the game if lives are depleted.
+         */
+        function nextQuestion() {
+            if (state.lives <= 0) {
+                endGame();
+                return;
+            }
+            
+            state.isAnswered = false;
+            hideFeedback();
+            
+            // Pick a question from the pool
+            if(state.questionPool.length === 0) {
+                 state.questionPool = shuffleArray([...ALPHABET_DATA]);
+            }
+            state.currentQuestion = state.questionPool.pop();
+            
+            renderQuestion();
+            speak(state.currentQuestion.name);
+        }
+
+        /**
+         * Renders the current question and answer options to the DOM.
+         */
+        function renderQuestion() {
+            const correctAnswer = state.currentQuestion.letter;
+            const options = generateOptions(correctAnswer);
+            
+            dom.ui.answerOptions.innerHTML = '';
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.className = 'answer-btn';
+                button.textContent = option;
+                button.dataset.letter = option;
+                dom.ui.answerOptions.appendChild(button);
+            });
+        }
+        
+        /**
+         * Handles the user's click on an answer button.
+         * Uses event delegation for efficiency.
+         */
+        function handleAnswerClick(event) {
+            if (state.isAnswered || !event.target.matches('.answer-btn')) {
+                return;
+            }
+            state.isAnswered = true;
+            
+            const selectedButton = event.target;
+            const selectedAnswer = selectedButton.dataset.letter;
+            const correctAnswer = state.currentQuestion.letter;
+            
+            const isCorrect = selectedAnswer === correctAnswer;
+            
+            if (isCorrect) {
+                processCorrectAnswer(selectedButton);
+            } else {
+                processWrongAnswer(selectedButton);
+            }
+            
+            // Highlight the correct answer regardless
+            const correctButton = dom.ui.answerOptions.querySelector(`[data-letter="${correctAnswer}"]`);
+            if (correctButton && !isCorrect) {
+                correctButton.classList.add('correct');
+            }
+            
+            disableAnswerButtons();
+            showFeedback(isCorrect);
+        }
+        
+        /**
+         * Logic for a correct answer. Updates state and UI.
+         */
+        function processCorrectAnswer(button) {
+            state.score += XP_PER_CORRECT;
+            state.streak++;
+            button.classList.add('correct');
+        }
+        
+        /**
+         * Logic for a wrong answer. Updates state and UI.
+         */
+        function processWrongAnswer(button) {
+            state.lives--;
+            state.streak = 0;
+            button.classList.add('wrong');
+            
+            // Add the missed question back to the pool to be repeated sooner (Spaced Repetition)
+            // We add it twice to increase its probability of appearing again.
+            state.questionPool.unshift(state.currentQuestion);
+            state.questionPool.unshift(state.currentQuestion);
+        }
+
+        /**
+         * Ends the current game session.
+         */
+        function endGame() {
+            dom.stats.finalScore.textContent = state.score;
+            updateHighScore();
+            switchScreen(dom.screens.end);
+        }
+
+        // =========================================================================
+        // 6. UI & VISUALS
+        // - Functions responsible for updating the user interface.
+        // =========================================================================
+        
+        /**
+         * Switches the visible screen with a smooth transition.
+         */
+        function switchScreen(activeScreen) {
+            Object.values(dom.screens).forEach(screen => screen.classList.add('hidden'));
+            activeScreen.classList.remove('hidden');
+        }
+
+        /**
+         * Updates the score, lives, and streak display.
+         */
+        function updateStatsUI() {
+            dom.stats.score.textContent = state.score;
+            dom.stats.lives.textContent = state.lives;
+            dom.stats.streak.textContent = state.streak;
+        }
+        
+        /**
+         * Shows the feedback footer with correct/wrong styling.
+         */
+        function showFeedback(isCorrect) {
+            const footer = dom.ui.feedbackFooter;
+            const text = dom.ui.feedbackText;
+            const button = dom.buttons.next;
+            
+            footer.className = isCorrect ? 'correct' : 'wrong';
+            text.className = isCorrect ? 'correct' : 'wrong';
+            button.className = 'button'; // reset
+            button.classList.add(isCorrect ? 'primary' : 'danger');
+
+            if(isCorrect) {
+                text.textContent = "¡Excelente!";
+                button.style.background = 'var(--primary-color)';
+                button.style.borderColor = 'var(--primary-color-dark)';
+            } else {
+                text.textContent = `Respuesta correcta: ${state.currentQuestion.letter} (${state.currentQuestion.name})`;
+                button.style.background = 'var(--danger-color)';
+                button.style.borderColor = 'var(--danger-color-dark)';
+            }
+            
+            updateStatsUI();
+            footer.classList.add('show');
+        }
+        
+        /**
+         * Hides the feedback footer.
+         */
+        function hideFeedback() {
+            dom.ui.feedbackFooter.classList.remove('show');
+        }
+        
+        /**
+         * Disables all answer buttons after an answer is chosen.
+         */
+        function disableAnswerButtons() {
+            dom.ui.answerOptions.querySelectorAll('.answer-btn').forEach(btn => {
+                btn.classList.add('disabled');
+            });
+        }
+        
+        // =========================================================================
+        // 7. DATA & STATE MANAGEMENT
+        // - Functions for handling game state and local storage.
+        // =========================================================================
+        
+        /**
+         * Resets the game state to its initial values.
+         */
+        function resetState() {
+            state.score = 0;
+            state.lives = INITIAL_LIVES;
+            state.streak = 0;
+            state.questionPool = shuffleArray([...ALPHABET_DATA]);
+            state.isAnswered = false;
+        }
+        
+        /**
+         * Loads the high score from localStorage.
+         */
+        function loadHighScore() {
+            const savedScore = localStorage.getItem('alphabetGameHighScore');
+            state.highScore = savedScore ? parseInt(savedScore, 10) : 0;
+            dom.stats.highScore.textContent = state.highScore;
+        }
+
+        /**
+         * Updates the high score if the current score is higher and saves it.
+         */
+        function updateHighScore() {
+            if (state.score > state.highScore) {
+                state.highScore = state.score;
+                localStorage.setItem('alphabetGameHighScore', state.highScore);
+                dom.stats.highScore.textContent = state.highScore;
+            }
+        }
+        
+        // =========================================================================
+        // 8. UTILITY FUNCTIONS
+        // - Helper functions that can be reused across the application.
+        // =========================================================================
+
+        /**
+         * Generates a set of multiple-choice options.
+         * @param {string} correctAnswer - The correct letter to include in the options.
+         * @returns {string[]} An array of shuffled option letters.
+         */
+        function generateOptions(correctAnswer) {
+            let options = [correctAnswer];
+            let distractors = ALPHABET_DATA.filter(item => item.letter !== correctAnswer);
+            
+            distractors = shuffleArray(distractors);
+            
+            for(let i = 0; i < OPTIONS_COUNT - 1; i++) {
+                options.push(distractors[i].letter);
+            }
+            
+            return shuffleArray(options);
+        }
+
+        /**
+         * Shuffles an array in place using the Fisher-Yates algorithm.
+         * An essential utility for any quiz/game.
+         * @param {any[]} array - The array to shuffle.
+         * @returns {any[]} The shuffled array.
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]]; // ES6 destructuring swap
+            }
+            return array;
+        }
+        
+        // =========================================================================
+        // 9. INITIALIZATION
+        // - Kicks everything off once the DOM is fully loaded.
+        // =========================================================================
+        
+        init();
+
+    });
+    </script>
 </body>
 </html>
